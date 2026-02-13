@@ -5,7 +5,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write  # Penting! Izin supaya bot bisa push kode ke branch builds
+  contents: write  # Wajib ada supaya bisa push branch baru
 
 on:
   push:
@@ -19,32 +19,25 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # 1. Kita cuma butuh checkout source code utama saja
       - name: Checkout Code
-        uses: actions/checkout@v4  # Diperbaiki ke v4
+        uses: actions/checkout@v4
         with:
           path: "src"
 
-      - name: Checkout Builds Branch
-        uses: actions/checkout@v4  # Diperbaiki ke v4
-        with:
-          ref: "builds"
-          path: "builds"
-
-      - name: Clean old builds
-        run: |
-          rm $GITHUB_WORKSPACE/builds/*.cs3 || true
-          rm $GITHUB_WORKSPACE/builds/*.jar || true
-
+      # 2. Setup Java
       - name: Setup JDK 17
-        uses: actions/setup-java@v4  # Diperbaiki ke v4
+        uses: actions/setup-java@v4
         with:
           java-version: 17
           distribution: adopt
           cache: gradle
 
+      # 3. Setup Android
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      # 4. Inject Secrets (Sama seperti sebelumnya)
       - name: Access Secrets
         env:
           TMDB_API: ${{ secrets.TMDB_API }}
@@ -149,23 +142,32 @@ jobs:
           echo "VideasyDEC=$VideasyDEC" >> local.properties
           echo "NuvFeb=$NuvFeb" >> local.properties
 
-      - name: Build Plugins
+      # 5. Build Plugins & Kumpulkan Hasilnya
+      - name: Build and Prepare Artifacts
         run: |
           cd $GITHUB_WORKSPACE/src
           chmod +x gradlew
           ./gradlew make makePluginsJson
           ./gradlew ensureJarCompatibility
-          # Gunakan || true untuk mencegah error jika file belum ada
-          cp **/build/*.cs3 $GITHUB_WORKSPACE/builds || true
-          cp **/build/*.jar $GITHUB_WORKSPACE/builds || true
-          cp build/plugins.json $GITHUB_WORKSPACE/builds || true
+          
+          # Buat folder sementara untuk menampung hasil build
+          mkdir -p $GITHUB_WORKSPACE/output_builds
+          
+          # Copy hasil build ke folder sementara
+          cp **/build/*.cs3 $GITHUB_WORKSPACE/output_builds/ || true
+          cp **/build/*.jar $GITHUB_WORKSPACE/output_builds/ || true
+          cp build/plugins.json $GITHUB_WORKSPACE/output_builds/ || true
 
-      - name: Push builds
+      # 6. Deploy ke Branch 'builds' (Otomatis buat branch baru)
+      - name: Push to builds branch
         run: |
-          cd $GITHUB_WORKSPACE/builds
-          git config --local user.email "actions@github.com"
-          git config --local user.name "GitHub Actions"
+          cd $GITHUB_WORKSPACE/output_builds
+          git init
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git checkout -b builds
           git add .
-          # Hanya commit jika ada perubahan
-          git commit --amend -m "Build $GITHUB_SHA" || git commit -m "Build $GITHUB_SHA" || exit 0
-          git push --force
+          git commit -m "Build update: $GITHUB_SHA"
+          
+          # Force push ke branch 'builds'. Ini akan membuat branch jika belum ada.
+          git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git builds
