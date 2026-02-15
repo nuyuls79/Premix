@@ -57,7 +57,7 @@ jobs:
           # MEMBUAT FILE repo.json SECARA OTOMATIS
           cat <<EOF > $GITHUB_WORKSPACE/output_builds/repo.json
           {
-              "name": "Michat88 Repo",
+              "name": "WDK Repo",
               "iconUrl": "https://github.com/michat88.png",
               "description": "Repository Plugin WDK",
               "manifestVersion": 1,
