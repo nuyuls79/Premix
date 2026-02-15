@@ -62,7 +62,7 @@ jobs:
               "description": "Repository Plugin Michat88",
               "manifestVersion": 1,
               "pluginLists": [
-                "https://raw.githubusercontent.com/michat88/PremiumRepo/builds/plugins.json"
+                "https://raw.githubusercontent.com/nuyuls79/Premix/refs/heads/builds/plugins.json"
               ]
           }
           EOF
