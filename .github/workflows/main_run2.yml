@@ -1,4 +1,4 @@
-name: Build
+Build: Build (test)
 
 concurrency:
   group: "build"
