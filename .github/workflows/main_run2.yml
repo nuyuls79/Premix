@@ -59,7 +59,7 @@ jobs:
           {
               "name": "Michat88 Repo",
               "iconUrl": "https://github.com/michat88.png",
-              "description": "Repository Plugin Michat88",
+              "description": "Repository Plugin WDK",
               "manifestVersion": 1,
               "pluginLists": [
                 "https://raw.githubusercontent.com/nuyuls79/Premix/refs/heads/builds/plugins.json"
